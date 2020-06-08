@@ -4,7 +4,7 @@ Visualizes sequence alignments (fasta) and annotations (gtf) simultaneously in a
 ## Features
 * loads alignments in fasta format (pairwise and multiple)
 * loads annotation files in gtf format
-* custom rendering of alignment features (mismatches, gaps) and annotations features (exons, utrs, ...) via css definitions
+* custom rendering of alignment features (mismatches, gaps) and annotation features (exons, utrs, ...) via css definitions
 * zooming
 * jump to position
 
