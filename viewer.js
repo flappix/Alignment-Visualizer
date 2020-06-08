@@ -1,112 +1,18 @@
 let curr_alignment = null;
 
-function Genome()
-{
-	this.contigs = [];
-	
-	this.fetch = function (filename)
-	{
-		$.ajax({
-			url: filename,
-			async: false,
-			success: (result) => {
-				let data = result.split ('\n');
-				for (let line of data)
-				{
-					if (line.charAt (0) != '#')
-					{
-						if (line.charAt (0) == '>')
-						{
-							this.contigs.push ( {'name': line.substr (1), seq: '', annotations: []} );
-						}
-						else
-						{
-							this.contigs[this.contigs.length - 1].seq += line;
-						}
-					}
-				}
-			}
-		});
-		
-		for (let c of this.contigs)
-		{
-			$('#contigs').append ( $(`<option>${c.name}</option>`) );
-		}
-		
-		$('#viewer').append ( $('<div id="genome"></div>') );
-	}
-	
-	this.fetchAnnotation = function (filename)
-	{
-		$.ajax({
-			url: filename,
-			async: false,
-			success: (result) => {
-				let data = result.split ('\n');
-				for (let line of data)
-				{
-					if (line.trim() != '' && line.charAt (0) != '#')
-					{
-						let fields = line.split ('\t');
-						let contig = this.getContigByName (fields[0]);
-						
-						if (contig != null)
-						{
-							contig.annotations.push ({start: fields[3] - 1, end: fields[4] - 1, type: fields[2], strand: fields[5]});
-						}
-						else
-						{
-							console.log (`No contig named ${fields[0]} found`);
-						}
-						
-					}
-				}
-			}
-		});
-	}
-	
-	this.getContigByName = function (name)
-	{
-		for (let c of this.contigs)
-		{
-			if (c.name == name) return c;
-		}
-	}
-	
-	this.loadContig = function (name)
-	{
-		$('#genome').html ('');
-		let contig = this.getContigByName (name);
-		for (let pos in contig.seq)
-		{
-			let nt = $(`<span class="nt">${contig.seq.charAt (pos)}</span>`);
-			for (let a of contig.annotations)
-			{
-				if (pos >= a.start && pos <= a.end)
-				{
-					nt.addClass (a.type);
-				}
-			}
-			
-			$('#genome').append (nt);
-		}
-	}
-}
-
 function Alignment (url)
 {
-	this.name = '';
-	this.seqs = [];
-	this.seqs_map = {};
-	this.aln_div = $('<div class="alignment"></div>');
-	this.nt_width = 0;
-	this.nt_height = 0;
-	this.maxSeqLength = 0;
+	let name = '';
+	let seqs = [];
+	let seqs_map = {};
+	let aln_div = $('<div class="alignment"></div>');
+	let nt_width = 0;
+	let nt_height = 0;
+	let maxSeqLength = 0;
+	let selectRegionStart = null;
+	let selectRegionEnd = null;
 	
-	this.selectRegionStart = null;
-	this.selectRegionEnd = null;
-	
-	this.nts = null;
+	let nts = null;
 	
 	this.fetch = function()
 	{
@@ -122,12 +28,12 @@ function Alignment (url)
 						if (line.charAt (0) == '>')
 						{
 							let seq = {'name': line.substr (1), seq: '', annotations: []};
-							this.seqs.push (seq);
-							this.seqs_map[seq.name] = seq;
+							seqs.push (seq);
+							seqs_map[seq.name] = seq;
 						}
 						else
 						{
-							this.seqs[this.seqs.length - 1].seq += line;
+							seqs[seqs.length - 1].seq += line;
 						}
 					}
 				}
@@ -139,18 +45,18 @@ function Alignment (url)
 		
 		let seq_labels = $('<div class="seq_labels"><div>');
 		container.append (seq_labels);
-		container.append (this.aln_div);
+		container.append (aln_div);
 		
-		this.name = this.seqs.map (x => x.name).join ('_');
+		name = seqs.map (x => x.name).join ('_');
 		
-		for (let i in this.seqs)
+		for (let i in seqs)
 		{
-			let seq = this.seqs[i];
+			let seq = seqs[i];
 			seq_labels.append ( $(`<div class="seq_label">${seq.name}</div>`) );
-			this.aln_div.append ( $(`<div id="${this.name}_seq_${seq.name}" class="seq"></div>`) );
+			aln_div.append ( $(`<div id="${name}_seq_${seq.name}" class="seq"></div>`) );
 		}
 		
-		/*this.aln_div.on ('wheel', (evt) =>
+		/*aln_div.on ('wheel', (evt) =>
 		{
 			this.zoom (evt.originalEvent.deltaY > 0 ? 1 : -1);
 		});*/
@@ -165,7 +71,7 @@ function Alignment (url)
 			}
 		});
 		
-		this.maxSeqLength = Math.max ( ...this.seqs.map (x => x.seq.length) );
+		maxSeqLength = Math.max ( ...seqs.map (x => x.seq.length) );
 		
 		let goto_div = $('<div class="goto"></div>');
 		let goto = $('<input type="text" placeholder="goto position" />');
@@ -176,9 +82,9 @@ function Alignment (url)
 				try
 				{
 					let pos = Number (goto.val());
-					if (pos >= 0 && pos <= this.maxSeqLength)
+					if (pos >= 0 && pos <= maxSeqLength)
 					{
-						this.aln_div.scrollLeft (pos * this.nt_width);
+						aln_div.scrollLeft (pos * nt_width);
 					}
 				}
 				catch (error) {}
@@ -199,7 +105,7 @@ function Alignment (url)
 	{
 		for (let a of annotation.annotations)
 		{
-			let seq = this.seqs_map[a.seq];
+			let seq = seqs_map[a.seq];
 			if (seq != null)
 			{
 				seq.annotations.push (a);
@@ -210,12 +116,12 @@ function Alignment (url)
 	this.load = function()
 	{
 		this.zoomFitToPage (apply=false);
-		this.nt_height = 20;
+		nt_height = 20;
 		
 		let fst_nt_top;
-		for (let i in this.seqs)
+		for (let i in seqs)
 		{
-			let seq = this.seqs[i];
+			let seq = seqs[i];
 			
 			let nt_str = ``;
 			let ungapped_pos = 0;
@@ -233,13 +139,9 @@ function Alignment (url)
 					ungapped_pos++;
 				}
 				
-				let refChar = this.seqs[0].seq.charAt (pos);
-				//console.log (`${this.seqs[i].name}:${pos}`);
-				//console.log (refChar);
-				//console.log (char);
+				let refChar = seqs[0].seq.charAt (pos);
 				if (i > 0 && refChar != '-' && char != refChar)
 				{
-					//console.log ('mismatch');
 					classes += ' mismatch';
 				}
 				
@@ -251,22 +153,22 @@ function Alignment (url)
 					}
 				}
 				
-				nt_str += `<span data-pos="${pos}" data-ungapped_pos="${ungapped_pos}" data-char="${char}" class="${classes}" style="width: ${this.nt_width}px;">${this.nt_width / this.nt_height >= 0.5 ? char : ''}</span>`
+				nt_str += `<span data-pos="${pos}" data-ungapped_pos="${ungapped_pos}" data-char="${char}" class="${classes}" style="width: ${nt_width}px;">${nt_width / nt_height >= 0.5 ? char : ''}</span>`
 			}
 			
-			$(`#${this.name}_seq_${seq.name}`).append ($(nt_str));
+			$(`#${name}_seq_${seq.name}`).append ($(nt_str));
 			
 			// needed for selection
-			if (i == 0) fst_nt_top = $(`#${this.name}_seq_${seq.name} .nt`).first().offset().top;
+			if (i == 0) fst_nt_top = $(`#${name}_seq_${seq.name} .nt`).first().offset().top;
 		}
 		
-		this.nts = this.aln_div.find ('.nt');
+		nts = aln_div.find ('.nt');
 		
-		this.aln_div.on ('mousedown', (evt) =>
+		aln_div.on ('mousedown', (evt) =>
 		{
 			if (evt.which == 1) // left click
 			{
-				if (this.nt_width / this.nt_height < 0.5)
+				if (nt_width / nt_height < 0.5)
 				{
 					this.selectRegionStart = {pos: evt.target.dataset.pos, screenX: evt.pageX};
 				}
@@ -286,7 +188,7 @@ function Alignment (url)
 				selection.css ('left', fst.screenX);
 				selection.css ('top', fst_nt_top);
 				selection.width (snd.screenX - fst.screenX);
-				selection.height (this.nt_height * this.seqs.length);
+				selection.height (nt_height * seqs.length);
 				selection.show();
 			}
 		});
@@ -305,9 +207,9 @@ function Alignment (url)
 						
 						if (distance > 10)
 						{
-							this.nt_width = Math.round ( this.aln_div.width() / distance );
+							nt_width = Math.round ( aln_div.width() / distance );
 							this.applyZoom();
-							this.aln_div.scrollLeft ( Math.min (this.selectRegionStart.pos, this.selectRegionEnd.pos) * this.nt_width );
+							aln_div.scrollLeft ( Math.min (this.selectRegionStart.pos, this.selectRegionEnd.pos) * nt_width );
 						}
 					}
 					
@@ -325,18 +227,18 @@ function Alignment (url)
 		
 		if (offset < 0)
 		{
-			if ( Math.round ( this.maxSeqLength * this.nt_width * zoomFactor ) > Math.round ( this.aln_div.width() ) )
+			if ( Math.round ( maxSeqLength * nt_width * zoomFactor ) > Math.round ( aln_div.width() ) )
 			{
-				this.nt_width *= zoomFactor;
+				nt_width *= zoomFactor;
 			}
 			else
 			{
-				this.nt_width = this.aln_div.width() / Math.max ( ...this.seqs.map (x => x.seq.length) )
+				nt_width = aln_div.width() / Math.max ( ...seqs.map (x => x.seq.length) )
 			}
 		}
 		else
 		{
-			this.nt_width *= 1 + (1 - zoomFactor);
+			nt_width *= 1 + (1 - zoomFactor);
 		}
 			
 		this.applyZoom();
@@ -344,21 +246,21 @@ function Alignment (url)
 	
 	this.zoomFitToPage = function (apply=true)
 	{
-		this.nt_width = this.aln_div.width() / this.maxSeqLength;
+		nt_width = aln_div.width() / maxSeqLength;
 		if (apply) this.applyZoom();
 	}
 	
 	this.applyZoom = function()
 	{
-		this.nts.width (this.nt_width);
+		nts.width (nt_width);
 		
-		if (this.nt_width / this.nt_height < 0.5)
+		if (nt_width / nt_height < 0.5)
 		{
-			this.nts.html ('');
+			nts.html ('');
 		}
 		else
 		{
-			this.nts.each ( function (nt)
+			nts.each ( function (nt)
 			{
 				$(this).html ( $(this).data ('char') );
 			});
