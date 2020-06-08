@@ -106,6 +106,8 @@ function Alignment (url)
 	this.selectRegionStart = null;
 	this.selectRegionEnd = null;
 	
+	this.nts = null;
+	
 	this.fetch = function()
 	{
 		$.ajax({
@@ -155,9 +157,12 @@ function Alignment (url)
 		
 		container.on ('click', (evt) =>
 		{
-			curr_alignment = this;
-			$('.active').removeClass ('active');
-			container.addClass ('active');
+			if (evt.which == 1) // left click
+			{
+				curr_alignment = this;
+				$('.active').removeClass ('active');
+				container.addClass ('active');
+			}
 		});
 		
 		this.maxSeqLength = Math.max ( ...this.seqs.map (x => x.seq.length) );
@@ -251,14 +256,20 @@ function Alignment (url)
 			
 			$(`#${this.name}_seq_${seq.name}`).append ($(nt_str));
 			
+			// needed for selection
 			if (i == 0) fst_nt_top = $(`#${this.name}_seq_${seq.name} .nt`).first().offset().top;
 		}
 		
+		this.nts = this.aln_div.find ('.nt');
+		
 		this.aln_div.on ('mousedown', (evt) =>
 		{
-			if (this.nt_width / this.nt_height < 0.5)
+			if (evt.which == 1) // left click
 			{
-				this.selectRegionStart = {pos: evt.target.dataset.pos, screenX: evt.pageX};
+				if (this.nt_width / this.nt_height < 0.5)
+				{
+					this.selectRegionStart = {pos: evt.target.dataset.pos, screenX: evt.pageX};
+				}
 			}
 		});
 		
@@ -282,25 +293,28 @@ function Alignment (url)
 		
 		$(document).on ('mouseup', (evt) =>
 		{
-			if (this.selectRegionStart != null)
-			{	
-				if ( evt.target != null && $(evt.target).hasClass ('nt') )
-				{
-					this.selectRegionEnd = {pos: evt.target.dataset.pos};
-									
-					let distance = Math.abs (this.selectRegionEnd.pos - this.selectRegionStart.pos);
-					
-					if (distance > 10)
+			if (evt.which == 1) // left click
+			{
+				if (this.selectRegionStart != null)
+				{	
+					if ( evt.target != null && $(evt.target).hasClass ('nt') )
 					{
-						this.nt_width = Math.round ( this.aln_div.width() / distance );
-						this.applyZoom();
-						this.aln_div.scrollLeft ( Math.min (this.selectRegionStart.pos, this.selectRegionEnd.pos) * this.nt_width );
+						this.selectRegionEnd = {pos: evt.target.dataset.pos};
+										
+						let distance = Math.abs (this.selectRegionEnd.pos - this.selectRegionStart.pos);
+						
+						if (distance > 10)
+						{
+							this.nt_width = Math.round ( this.aln_div.width() / distance );
+							this.applyZoom();
+							this.aln_div.scrollLeft ( Math.min (this.selectRegionStart.pos, this.selectRegionEnd.pos) * this.nt_width );
+						}
 					}
+					
+					$('#selection').hide();
+					this.selectRegionStart = null;
+					this.selectRegionEnd = null;
 				}
-				
-				$('#selection').hide();
-				this.selectRegionStart = null;
-				this.selectRegionEnd = null;
 			}
 		});
 	}
@@ -336,15 +350,15 @@ function Alignment (url)
 	
 	this.applyZoom = function()
 	{
-		this.aln_div.find ('.nt').width (this.nt_width);
+		this.nts.width (this.nt_width);
 		
 		if (this.nt_width / this.nt_height < 0.5)
 		{
-			this.aln_div.find ('.nt').html ('');
+			this.nts.html ('');
 		}
 		else
 		{
-			this.aln_div.find ('.nt').each ( function (nt)
+			this.nts.each ( function (nt)
 			{
 				$(this).html ( $(this).data ('char') );
 			});
@@ -415,9 +429,9 @@ function init()
 		}
 		else if (mode == 'multiple')
 		{
-			let all_flcs = new Alignment ('files/fasta/alignments/all.flcs.fasta');
-			all_flcs.addAnnotation (annotation);
-			all_flcs.load();
+			alignment = new Alignment ('files/fasta/alignments/all.flcs.fasta');
+			alignment.addAnnotation (annotation);
+			alignment.load();
 		}
 		
 		$('#loading').css ('display', 'none');
