@@ -7,107 +7,10 @@
 <link rel="stylesheet" href="jquery-ui.css">
 	<script src="jquery-3.5.1.min.js"></script>
 	<script src="jquery-ui.js"></script>
-	  
-	<style type="text/css">
-		#viewer
-		{
-			user-select:none;
-		}
-		
-		.seq_labels
-		{
-			display: inline-block;
-			width: auto;
-			vertical-align:top;
-		}
-		
-		.seq_label, .seq
-		{
-			height: 20px;
-		}
-		
-		.seq
-		{
-			font-family: Courier New;
-		}
-		
-		.alignment
-		{
-			display: inline-block;
-			overflow-x: scroll;
-			scrollbar-height 10px;
-			white-space: pre;
-			flex: 1;
-			padding: 0px;
-		}
-		
-		.flex_container
-		{
-			display: flex;
-			margin-bottom: 30px;
-			border: 2px solid grey;
-		}
-
-		.nt
-		{
-			display: inline-block;
-			text-align: center;
-			background-color: #BBBBBB;
-			padding: 0px;
-			margin: 0px;
-			height: 100%;
-		}
-		
-		.content
-		{
-			padding: 0px;
-			margin: 0px;
-		}
-		
-		.exon
-		{
-			background-color: green;
-			color: white;
-		}
-		
-		.mismatch
-		{
-			background-color: red;
-			color: white;
-		}
-		
-		.gap
-		{
-			background-color: white;
-			color: black;
-		}
-		
-		.active
-		{
-			border: 2px solid #3DAAFF;
-		}
-		
-		#selection
-		{
-			position: absolute;
-			background-color: #73EBFF;
-			opacity: 0.6;
-			z-index: 9999;
-			display: none;
-		}
-		
-		#loading
-		{
-			position: absolute;
-			z-index: 10000;
-			width: 100%;
-			height: 100%;
-			left: 0px;
-			top: 0px;
-			font-size: 10em;
-			text-align: center;
-		}
-	</style>
+	<script src="viewer.js"></script>
+	<script src="brassica_napus.js"></script>
+	<link type="text/css" rel="Stylesheet" href="style.css" />
+	<link type="text/css" rel="Stylesheet" href="features.css" />
 </head>
 
 <body>
@@ -119,9 +22,6 @@
 	
 	</div>
 	<div id="selection"></div>
-	
-	<script type="text/javascript" src="viewer.js">
-	</script>
 </body>
 
 </html>
