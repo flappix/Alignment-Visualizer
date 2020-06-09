@@ -96,10 +96,7 @@ function Alignment (url)
 		
 		goto_div.append (goto);
 		seq_labels.append (goto_div);
-		
 	}
-	
-	this.fetch();
 	
 	this.addAnnotation = function (annotation)
 	{
@@ -155,7 +152,6 @@ function Alignment (url)
 				
 				nt_str += `<span data-pos="${pos}" data-ungapped_pos="${ungapped_pos}" data-char="${char}" class="${classes}" style="width: ${nt_width}px;">${nt_width / nt_height >= 0.5 ? char : ''}</span>`
 			}
-			
 			$(`#${name}_seq_${seq.name}`).append ($(nt_str));
 			
 			// needed for selection
@@ -187,7 +183,7 @@ function Alignment (url)
 				
 				selection.css ('left', fst.screenX);
 				selection.css ('top', fst_nt_top);
-				selection.width (snd.screenX - fst.screenX);
+				selection.width ( snd.screenX - fst.screenX - Number ( selection.css ('border').charAt (0) ) * 2 );
 				selection.height (nt_height * seqs.length);
 				selection.show();
 			}
@@ -258,12 +254,14 @@ function Alignment (url)
 		if (nt_width / nt_height < 0.5)
 		{
 			nts.html ('');
+			$('#viewer').css ('user-select', 'auto');
 		}
 		else
 		{
 			nts.each ( function (nt)
 			{
 				$(this).html ( $(this).data ('char') );
+				$('#viewer').css ('user-select', 'auto');
 			});
 		}
 	}
@@ -294,10 +292,11 @@ function Annotation (url)
 	
 	this.fetch();
 }
-	
 
 $(document).ready ( function()
-{	
+{
+	$(document.body).append ( $('<div id="selection"></div>') );
+	
 	$(document).on ('keydown', function (evt)
 	{
 		if (curr_alignment != null)

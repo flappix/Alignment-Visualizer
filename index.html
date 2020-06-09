@@ -14,14 +14,21 @@
 </head>
 
 <body>
-
+	
 	<div id="loading">
-		Loading ...
+		<button onclick="loadDataset ('Pairwise Darmor-bzh')">Pairwise Darmor-bzh</button>
+		<button onclick="loadDataset ('Multiple Darmor-bzh')">Multiple Darmor-bzh</button>
+	</div>
+	<div id="legend">
+		<div class="legend"><span class="nt legend"></span> no feature</div>
+		<div class="legend"><span class="gene legend"></span> gene</div>
+		<div class="legend"><span class="exon legend"></span> exon</div>
+		<div class="legend"><span class="mismatch legend"></span> mismatch</div>
+		<div class="legend"><span class="gap legend" style="border: 1px solid black;"></span> gap</div>
 	</div>
 	<div id="viewer">
 	
 	</div>
-	<div id="selection"></div>
 </body>
 
 </html>
